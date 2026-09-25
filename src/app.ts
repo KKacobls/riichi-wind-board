@@ -14,7 +14,7 @@ interface PersistedApp {
 }
 
 const STORAGE_KEY = 'riichi-wind-board.v1';
-const APP_VERSION = '0.2.3';
+const APP_VERSION = '0.2.4';
 let core: RW.AppCore;
 let journal: JournalEntry[] = [];
 let activeTab: 'game' | 'log' | 'settings' = 'game';
