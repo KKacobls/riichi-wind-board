@@ -8,6 +8,7 @@
     "serve": "python -m http.server 8000"
   },
   "devDependencies": {
+    "gh-pages": "^6.3.0",
     "typescript": "^5.8.3"
   }
 }
