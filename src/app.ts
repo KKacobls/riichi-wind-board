@@ -36,6 +36,14 @@ function loadApp(): void {
       const parsed = JSON.parse(raw) as PersistedApp;
       if (parsed?.core?.game?.scores && parsed?.core?.config) {
         core = parsed.core;
+        core.config = {
+          ...RW.clone(RW.DEFAULT_CONFIG),
+          ...core.config,
+          rules: { ...RW.clone(RW.DEFAULT_CONFIG.rules), ...core.config.rules },
+        };
+        if (!Array.isArray(core.config.playerNames) || core.config.playerNames.length < 4) {
+          core.config.playerNames = RW.clone(RW.DEFAULT_CONFIG.playerNames);
+        }
         journal = Array.isArray(parsed.journal) ? parsed.journal : [];
         return;
       }
@@ -122,7 +130,7 @@ function lengthLabel(length: RW.GameLength): string {
 }
 
 function playerLabel(index: number): string {
-  return `玩家 ${String.fromCharCode(65 + index)}`;
+  return core.config.playerNames?.[index]?.trim() || `玩家 ${String.fromCharCode(65 + index)}`;
 }
 
 function windLabel(index: number): string {
@@ -148,7 +156,8 @@ function renderTabs(): void {
 
 function playerPositionClass(index: number, mode: RW.Mode): string {
   if (mode === 'yonma') return ['pos-bottom', 'pos-right', 'pos-top', 'pos-left'][index];
-  return ['pos-bottom', 'pos-right', 'pos-left'][index];
+  if (index === 2) return core.config.sanmaThirdSeat === 'top' ? 'pos-top' : 'pos-left';
+  return ['pos-bottom', 'pos-right'][index];
 }
 
 function renderGame(): void {
@@ -158,18 +167,35 @@ function renderGame(): void {
   const players = $('#players-layer');
   players.innerHTML = '';
 
+  board.style.setProperty('--center-text-scale', String((core.config.centerTextScale || 100) / 100));
+
   for (let i = 0; i < game.scores.length; i++) {
+    const seat = document.createElement('div');
+    seat.className = `player-seat ${playerPositionClass(i, game.mode)}`;
+
     const card = document.createElement('button');
-    card.className = `player-card ${playerPositionClass(i, game.mode)} ${i === game.dealerIndex ? 'dealer' : ''}`;
+    card.className = `player-card ${i === game.dealerIndex ? 'dealer' : ''}`;
     card.dataset.player = String(i);
     card.innerHTML = `
-      <span class="player-meta">${playerLabel(i)}</span>
+      <span class="player-meta">${escapeHtml(playerLabel(i))}</span>
       <strong class="wind-badge">${windLabel(i)}</strong>
       <span class="score-value">${fmt(game.scores[i])}</span>
-      ${game.riichiDeclared[i] ? '<span class="riichi-pill">立直</span>' : ''}
     `;
     card.addEventListener('click', () => openPlayerSheet(i));
-    players.appendChild(card);
+
+    const riichi = document.createElement('button');
+    riichi.className = `riichi-stick-button ${game.riichiDeclared[i] ? 'declared' : ''}`;
+    riichi.type = 'button';
+    riichi.title = game.riichiDeclared[i] ? '本局已立直' : `${playerLabel(i)} 立直（-1000）`;
+    riichi.setAttribute('aria-label', riichi.title);
+    riichi.disabled = game.ended || game.riichiDeclared[i] || game.scores[i] < 1000;
+    riichi.addEventListener('click', () => {
+      selectedPlayer = i;
+      declareSelectedRiichi();
+    });
+
+    seat.append(card, riichi);
+    players.appendChild(seat);
   }
 
   $('#round-main').textContent = RW.roundLabel(game);
@@ -217,7 +243,27 @@ function renderSettings(): void {
   ($('#rule-atamahane') as HTMLInputElement).checked = c.rules.atamahane;
   ($('#rule-kazoe') as HTMLInputElement).checked = c.rules.kazoeYakuman;
   ($('#rule-multiple-yakuman') as HTMLInputElement).checked = c.rules.multipleYakuman;
+  (document.querySelector(`input[name="sanma-third-seat"][value="${c.sanmaThirdSeat}"]`) as HTMLInputElement).checked = true;
+  ($('#center-text-scale') as HTMLInputElement).value = String(c.centerTextScale);
+  $('#center-text-scale-value').textContent = `${c.centerTextScale}%`;
   $('#current-game-summary').textContent = `目前：${modeLabel(game.mode)}・${lengthLabel(game.gameLength)}・${RW.roundLabel(game)}・${game.honba}本場`;
+
+  const names = $('#player-name-fields');
+  names.innerHTML = '';
+  for (let i = 0; i < 4; i++) {
+    const row = document.createElement('label');
+    row.className = 'player-name-row';
+    row.innerHTML = `<span>玩家 ${String.fromCharCode(65 + i)}</span><input data-player-name-index="${i}" type="text" maxlength="20" value="${escapeHtml(playerLabel(i))}">`;
+    names.appendChild(row);
+  }
+  names.querySelectorAll<HTMLInputElement>('[data-player-name-index]').forEach(input => {
+    input.addEventListener('change', () => {
+      const i = Number(input.dataset.playerNameIndex);
+      const next = core.config.playerNames.slice();
+      next[i] = input.value.trim() || `玩家 ${String.fromCharCode(65 + i)}`;
+      updateConfig('playerNames', next, `玩家 ${String.fromCharCode(65 + i)} 名稱：${next[i]}`);
+    });
+  });
 
   const manual = $('#manual-score-fields');
   manual.innerHTML = '';
@@ -238,7 +284,6 @@ function openPlayerSheet(player: number): void {
   const game = core.game;
   $('#sheet-title').textContent = `${playerLabel(player)}・${windLabel(player)}`;
   $('#sheet-score').textContent = `${fmt(game.scores[player])} 點`;
-  ($('#action-riichi') as HTMLButtonElement).disabled = game.ended || game.riichiDeclared[player] || game.scores[player] < 1000;
   ($('#action-ron') as HTMLButtonElement).disabled = game.ended;
   ($('#action-tsumo') as HTMLButtonElement).disabled = game.ended;
   ($('#action-draw') as HTMLButtonElement).disabled = game.ended;
@@ -542,7 +587,6 @@ function bindStaticEvents(): void {
   $('#undo-button').addEventListener('click', undoLast);
   $('#sheet-backdrop').addEventListener('click', closeSheets);
   document.querySelectorAll('[data-close-sheet]').forEach(el => el.addEventListener('click', closeSheets));
-  $('#action-riichi').addEventListener('click', declareSelectedRiichi);
   $('#action-ron').addEventListener('click', openRonSheet);
   $('#action-tsumo').addEventListener('click', openTsumoSheet);
   $('#action-draw').addEventListener('click', openDrawSheet);
@@ -554,6 +598,20 @@ function bindStaticEvents(): void {
   document.querySelectorAll<HTMLInputElement>('input[name="length"]').forEach(input => input.addEventListener('change', () => {
     if (input.checked) updateConfig('gameLength', input.value as RW.GameLength, `下次新局場次：${lengthLabel(input.value as RW.GameLength)}`);
   }));
+  document.querySelectorAll<HTMLInputElement>('input[name="sanma-third-seat"]').forEach(input => input.addEventListener('change', () => {
+    if (input.checked) updateConfig('sanmaThirdSeat', input.value as RW.SanmaThirdSeat, `三麻第三家位置：${input.value === 'top' ? '上方' : '左方'}`);
+  }));
+  $('#center-text-scale').addEventListener('input', () => {
+    const value = Number(($('#center-text-scale') as HTMLInputElement).value);
+    core.config.centerTextScale = value;
+    $('#center-text-scale-value').textContent = `${value}%`;
+    saveApp();
+    renderGame();
+  });
+  $('#center-text-scale').addEventListener('change', () => {
+    const value = Number(($('#center-text-scale') as HTMLInputElement).value);
+    addLog('SETTING', `中央文字大小：${value}%`);
+  });
   $('#start-yonma').addEventListener('change', () => {
     const value = Number(($('#start-yonma') as HTMLInputElement).value);
     if (value >= 0) updateConfig('startYonma', value, `四麻起始點數改為 ${fmt(value)}`);
