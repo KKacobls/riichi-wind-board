@@ -14,6 +14,7 @@ interface PersistedApp {
 }
 
 const STORAGE_KEY = 'riichi-wind-board.v1';
+const APP_VERSION = '0.2.0';
 let core: RW.AppCore;
 let journal: JournalEntry[] = [];
 let activeTab: 'game' | 'log' | 'settings' = 'game';
@@ -143,6 +144,7 @@ function render(): void {
   renderLog();
   renderSettings();
   $('#undo-button').toggleAttribute('disabled', !journal.some(e => e.undoable && !e.undone));
+  $('#app-version').textContent = `v${APP_VERSION}`;
 }
 
 function renderTabs(): void {
@@ -227,6 +229,7 @@ function renderLog(): void {
 function logIcon(kind: string): string {
   const map: Record<string, string> = {
     GAME_START: '◉', RIICHI: '立', RON: '榮', TSUMO: '摸', DRAW: '流',
+    NAGASHI_MANGAN: '滿', ABORTIVE_DRAW: '+1', DEALER_OVERRIDE: '莊',
     MANUAL_SCORE: '✎', SETTING: '⚙', UNDO: '↶',
   };
   return map[kind] || '•';
@@ -263,6 +266,21 @@ function renderSettings(): void {
       next[i] = input.value.trim() || `玩家 ${String.fromCharCode(65 + i)}`;
       updateConfig('playerNames', next, `玩家 ${String.fromCharCode(65 + i)} 名稱：${next[i]}`);
     });
+  });
+
+  const dealerControls = $('#dealer-override-fields');
+  dealerControls.innerHTML = '';
+  game.scores.forEach((_, i) => {
+    const button = document.createElement('button');
+    button.className = `dealer-choice-button ${i === game.dealerIndex ? 'active' : ''}`;
+    button.textContent = `${playerLabel(i)}・${windLabel(i)}`;
+    button.addEventListener('click', () => {
+      runAction('DEALER_OVERRIDE', '手動指定莊家', () => {
+        RW.overrideDealer(core.game, i);
+        return `手動指定莊家：${playerLabel(i)}`;
+      });
+    });
+    dealerControls.appendChild(button);
   });
 
   const manual = $('#manual-score-fields');
@@ -496,44 +514,126 @@ function openRonSheet(): void {
 function openDrawSheet(): void {
   closeSheets();
   const content = $('#settlement-content');
-  const rows = core.game.scores.map((score, i) => `
-    <label class="tenpai-row">
-      <input type="checkbox" data-tenpai="${i}">
-      <span><strong>${windLabel(i)}</strong><small>${playerLabel(i)}・${fmt(score)}</small></span>
-      <span class="tenpai-state">未聽</span>
-    </label>
-  `).join('');
-  content.innerHTML = `
-    <div class="settlement-heading"><div><span class="eyebrow">流局</span><h2>點選聽牌者</h2></div></div>
-    <div class="tenpai-list">${rows}</div>
-    <div id="draw-preview" class="rule-note">無人聽牌：不交換罰符。</div>
-    <button id="confirm-draw" class="primary-button">確認流局</button>
-  `;
 
-  const update = () => {
-    const checked = [...document.querySelectorAll<HTMLInputElement>('input[data-tenpai]')].filter(x => x.checked);
-    document.querySelectorAll<HTMLInputElement>('input[data-tenpai]').forEach(cb => {
+  const renderMenu = () => {
+    content.innerHTML = `
+      <div class="settlement-heading"><div><span class="eyebrow">流局</span><h2>選擇流局類型</h2></div></div>
+      <div class="draw-mode-grid">
+        <button id="draw-normal" class="action-tile"><strong>一般流局</strong><small>選聽牌者，結算 3000 點罰符</small></button>
+        <button id="draw-nagashi" class="action-tile win"><strong>流局滿貫</strong><small>滿貫自摸點取代聽牌罰符</small></button>
+        <button id="draw-abortive" class="action-tile"><strong>中途流局</strong><small>莊家不換、+1 本場、供託保留</small></button>
+      </div>
+      <div class="rule-note">天鳳式：流局滿貫仍視為流局，不另外收聽牌罰符；本場 +1，供託留桌上。</div>
+    `;
+
+    $('#draw-normal').addEventListener('click', renderNormal);
+    $('#draw-nagashi').addEventListener('click', renderNagashi);
+    $('#draw-abortive').addEventListener('click', renderAbortive);
+  };
+
+  const renderBack = () => '<button id="draw-back" class="text-button">‹ 返回流局選單</button>';
+
+  const renderNormal = () => {
+    const rows = core.game.scores.map((score, i) => `
+      <label class="tenpai-row">
+        <input type="checkbox" data-tenpai="${i}">
+        <span><strong>${windLabel(i)}</strong><small>${playerLabel(i)}・${fmt(score)}</small></span>
+        <span class="tenpai-state">未聽</span>
+      </label>
+    `).join('');
+    content.innerHTML = `
+      ${renderBack()}
+      <div class="settlement-heading"><div><span class="eyebrow">一般流局</span><h2>點選聽牌者</h2></div></div>
+      <div class="tenpai-list">${rows}</div>
+      <div id="draw-preview" class="rule-note">無人聽牌：不交換罰符。</div>
+      <button id="confirm-draw" class="primary-button">確認一般流局</button>
+    `;
+
+    const update = () => {
+      const checked = [...document.querySelectorAll<HTMLInputElement>('input[data-tenpai]')].filter(x => x.checked);
+      document.querySelectorAll<HTMLInputElement>('input[data-tenpai]').forEach(cb => {
+        const row = cb.closest('.tenpai-row')!;
+        row.classList.toggle('active', cb.checked);
+        (row.querySelector('.tenpai-state') as HTMLElement).textContent = cb.checked ? '聽牌' : '未聽';
+      });
+      const count = core.game.scores.length;
+      if (!checked.length || checked.length === count) {
+        $('#draw-preview').textContent = checked.length === count ? '全員聽牌：不交換罰符。' : '無人聽牌：不交換罰符。';
+      } else {
+        $('#draw-preview').textContent = `3000 點罰符：聽牌每家 +${fmt(3000 / checked.length)}，未聽每家 -${fmt(3000 / (count - checked.length))}`;
+      }
+    };
+
+    document.querySelectorAll<HTMLInputElement>('input[data-tenpai]').forEach(cb => cb.addEventListener('change', update));
+    $('#draw-back').addEventListener('click', renderMenu);
+    $('#confirm-draw').addEventListener('click', () => {
+      const tenpai = [...document.querySelectorAll<HTMLInputElement>('input[data-tenpai]')].filter(x => x.checked).map(x => Number(x.dataset.tenpai));
+      runAction('DRAW', '一般流局', () => {
+        const result = RW.settleDraw(core.game, tenpai);
+        return `${result.description}｜${RW.scoreDeltaText(result.deltas)}`;
+      });
+      closeSheets();
+    });
+    update();
+  };
+
+  const renderNagashi = () => {
+    const rows = core.game.scores.map((score, i) => `
+      <label class="tenpai-row">
+        <input type="checkbox" data-nagashi="${i}">
+        <span><strong>${windLabel(i)}</strong><small>${playerLabel(i)}・${fmt(score)}</small></span>
+        <span class="tenpai-state">未選</span>
+      </label>
+    `).join('');
+    content.innerHTML = `
+      ${renderBack()}
+      <div class="settlement-heading"><div><span class="eyebrow">流局滿貫</span><h2>選擇成立者</h2></div></div>
+      <div class="tenpai-list">${rows}</div>
+      <label class="toggle-row compact-toggle">
+        <span><strong>莊家聽牌</strong><small>只影響是否連莊；流局滿貫本身不代表聽牌</small></span>
+        <input id="nagashi-dealer-tenpai" class="switch-input" type="checkbox">
+      </label>
+      <div class="rule-note">滿貫自摸點會取代一般流局的 3000 點聽牌罰符；不吃本場、不拿供託。下一局仍 +1 本場，供託保留。</div>
+      <button id="confirm-nagashi" class="primary-button">確認流局滿貫</button>
+    `;
+
+    document.querySelectorAll<HTMLInputElement>('input[data-nagashi]').forEach(cb => cb.addEventListener('change', () => {
       const row = cb.closest('.tenpai-row')!;
       row.classList.toggle('active', cb.checked);
-      (row.querySelector('.tenpai-state') as HTMLElement).textContent = cb.checked ? '聽牌' : '未聽';
+      (row.querySelector('.tenpai-state') as HTMLElement).textContent = cb.checked ? '成立' : '未選';
+    }));
+    $('#draw-back').addEventListener('click', renderMenu);
+    $('#confirm-nagashi').addEventListener('click', () => {
+      const winners = [...document.querySelectorAll<HTMLInputElement>('input[data-nagashi]')]
+        .filter(x => x.checked)
+        .map(x => Number(x.dataset.nagashi));
+      const dealerTenpai = ($('#nagashi-dealer-tenpai') as HTMLInputElement).checked;
+      runAction('NAGASHI_MANGAN', '流局滿貫', () => {
+        const result = RW.settleNagashiMangan(core.game, winners, dealerTenpai);
+        return `${result.description}｜${RW.scoreDeltaText(result.deltas)}`;
+      });
+      closeSheets();
     });
-    const count = core.game.scores.length;
-    if (!checked.length || checked.length === count) {
-      $('#draw-preview').textContent = checked.length === count ? '全員聽牌：不交換罰符。' : '無人聽牌：不交換罰符。';
-    } else {
-      $('#draw-preview').textContent = `3000 點罰符：聽牌每家 +${fmt(3000 / checked.length)}，未聽每家 -${fmt(3000 / (count - checked.length))}`;
-    }
   };
-  document.querySelectorAll<HTMLInputElement>('input[data-tenpai]').forEach(cb => cb.addEventListener('change', update));
-  $('#confirm-draw').addEventListener('click', () => {
-    const tenpai = [...document.querySelectorAll<HTMLInputElement>('input[data-tenpai]')].filter(x => x.checked).map(x => Number(x.dataset.tenpai));
-    runAction('DRAW', '流局', () => {
-      const result = RW.settleDraw(core.game, tenpai);
-      return `${result.description}｜${RW.scoreDeltaText(result.deltas)}`;
+
+  const renderAbortive = () => {
+    content.innerHTML = `
+      ${renderBack()}
+      <div class="settlement-heading"><div><span class="eyebrow">中途流局</span><h2>增加一本場</h2></div></div>
+      <div class="rule-note">九種九牌、四風連打、四槓散了等可用這個。莊家不換，+1 本場；已投入的立直棒繼續留在供託。</div>
+      <button id="confirm-abortive" class="primary-button">確認中途流局（+1 本場）</button>
+    `;
+    $('#draw-back').addEventListener('click', renderMenu);
+    $('#confirm-abortive').addEventListener('click', () => {
+      runAction('ABORTIVE_DRAW', '中途流局', () => {
+        const result = RW.settleAbortiveDraw(core.game);
+        return result.description;
+      });
+      closeSheets();
     });
-    closeSheets();
-  });
-  update();
+  };
+
+  renderMenu();
   openSheet('settlement-sheet');
 }
 
@@ -638,6 +738,11 @@ function bindStaticEvents(): void {
   });
   $('#apply-manual-score').addEventListener('click', applyManualScores);
   $('#new-game-button').addEventListener('click', startNewGame);
+  window.addEventListener('pagehide', saveApp);
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') saveApp();
+  });
+
   $('#clear-log-button').addEventListener('click', () => {
     if (!window.confirm('只清除 Log？目前分數與局況不會改變。')) return;
     journal = [{ id: nowId('system'), ts: Date.now(), kind: 'SYSTEM', label: 'Log 已清除', undoable: false }];
