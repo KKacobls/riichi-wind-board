@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
   <meta name="theme-color" content="#1f6844">
   <title>日麻風位盤</title>
-  <link rel="stylesheet" href="style.css?v=0.2.2">
+  <link rel="stylesheet" href="style.css?v=0.2.3">
 </head>
 <body>
   <div class="app-shell">
@@ -141,17 +141,18 @@
           <div class="settings-title">對局</div>
           <button id="new-game-button" class="primary-button">新開一局</button>
           <p class="settings-caption">舊對局會留在 Log；新局動作本身也可以復原。</p>
-          <div class="version-row"><span>日麻風位盤</span><strong id="app-version">v0.2.2</strong></div>
+          <div class="version-row"><span>日麻風位盤</span><strong id="app-version">v0.2.3</strong></div>
           <p class="settings-caption">資料保存在此瀏覽器的 localStorage。重新整理、關閉分頁後再開都會保留；清除 Safari 網站資料或無痕模式例外。</p>
         </div>
       </section>
     </main>
 
-    <nav class="tabbar" aria-label="主選單">
+    <nav id="main-tabbar" class="tabbar" aria-label="主選單">
       <button data-tab="game" class="active"><span>◎</span><small>對局</small></button>
       <button data-tab="log"><span>☷</span><small>Log</small></button>
       <button data-tab="settings"><span>⚙</span><small>設定</small></button>
     </nav>
+    <button id="menu-toggle-button" class="menu-toggle-button" type="button" aria-controls="main-tabbar" aria-expanded="false">顯示</button>
   </div>
 
   <div id="sheet-backdrop" class="sheet-backdrop"></div>
@@ -180,7 +181,7 @@
 
   <div id="toast" class="toast"></div>
 
-  <script src="dist/logic.js?v=0.2.2"></script>
-  <script src="dist/app.js?v=0.2.2"></script>
+  <script src="dist/logic.js?v=0.2.3"></script>
+  <script src="dist/app.js?v=0.2.3"></script>
 </body>
 </html>
