@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+  <meta name="theme-color" content="#f2f2f7">
+  <title>日麻風位盤</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div>
+        <div class="eyebrow">Riichi Table</div>
+        <h1>日麻風位盤</h1>
+      </div>
+      <button id="undo-button" class="icon-button" aria-label="上一步">↶</button>
+    </header>
+
+    <main class="content">
+      <section id="view-game" class="view active">
+        <div class="game-wrap">
+          <div id="board" class="board yonma">
+            <div id="players-layer"></div>
+            <button id="center-card" class="center-card">
+              <span id="mode-main" class="center-kicker">四麻・半莊</span>
+              <strong id="round-main">東1局</strong>
+              <span id="honba-main">0 本場</span>
+              <span id="kyotaku-main">供託 0</span>
+            </button>
+          </div>
+          <p id="game-state-note" class="game-note"></p>
+        </div>
+      </section>
+
+      <section id="view-log" class="view">
+        <div class="section-header">
+          <div>
+            <div class="eyebrow">History</div>
+            <h2>對局 Log</h2>
+          </div>
+          <button id="clear-log-button" class="text-button danger-text">清除</button>
+        </div>
+        <div id="log-list" class="log-list"></div>
+      </section>
+
+      <section id="view-settings" class="view">
+        <div class="section-header">
+          <div>
+            <div class="eyebrow">Settings</div>
+            <h2>設定</h2>
+          </div>
+        </div>
+
+        <div class="settings-card">
+          <div class="settings-title">下一局</div>
+          <div id="current-game-summary" class="settings-caption"></div>
+          <div class="field-group">
+            <span class="field-label">模式</span>
+            <div class="segmented">
+              <label><input type="radio" name="mode" value="yonma"><span>四麻</span></label>
+              <label><input type="radio" name="mode" value="sanma"><span>三麻</span></label>
+            </div>
+          </div>
+          <div class="field-group">
+            <span class="field-label">場次</span>
+            <div class="segmented">
+              <label><input type="radio" name="length" value="hanchan"><span>半莊</span></label>
+              <label><input type="radio" name="length" value="east"><span>東風</span></label>
+            </div>
+          </div>
+          <div class="inline-fields">
+            <label>四麻起始點數<input id="start-yonma" type="number" step="100" min="0"></label>
+            <label>三麻起始點數<input id="start-sanma" type="number" step="100" min="0"></label>
+          </div>
+          <p class="settings-caption">模式、場次與起始點數在「新開一局」時套用。</p>
+        </div>
+
+        <div class="settings-card">
+          <div class="settings-title">規則</div>
+          <label class="toggle-row">
+            <span><strong>切上滿貫</strong><small>4番30符／3番60符 → 滿貫</small></span>
+            <input id="rule-kiriage" class="switch-input" type="checkbox">
+          </label>
+          <label class="toggle-row">
+            <span><strong>頭ハネ</strong><small>OFF 時允許複數榮和</small></span>
+            <input id="rule-atamahane" class="switch-input" type="checkbox">
+          </label>
+          <label class="toggle-row">
+            <span><strong>數え役滿</strong><small>13 番以上計役滿</small></span>
+            <input id="rule-kazoe" class="switch-input" type="checkbox">
+          </label>
+          <label class="toggle-row">
+            <span><strong>複合役滿</strong><small>允許 2 倍以上役滿</small></span>
+            <input id="rule-multiple-yakuman" class="switch-input" type="checkbox">
+          </label>
+          <div class="fixed-rule-note">三麻固定採自摸損；本場自摸每位支付者 +100，所以三麻每本場總共 +200。</div>
+        </div>
+
+        <div class="settings-card">
+          <div class="settings-title">手動修改分數</div>
+          <div id="manual-score-fields" class="manual-score-fields"></div>
+          <button id="apply-manual-score" class="secondary-button">套用分數</button>
+          <p class="settings-caption">手動修改也會寫入 Log，並可按右上角 ↶ 復原。</p>
+        </div>
+
+        <div class="settings-card danger-zone">
+          <div class="settings-title">對局</div>
+          <button id="new-game-button" class="primary-button">新開一局</button>
+          <p class="settings-caption">舊對局會留在 Log；新局動作本身也可以復原。</p>
+        </div>
+      </section>
+    </main>
+
+    <nav class="tabbar" aria-label="主選單">
+      <button data-tab="game" class="active"><span>◎</span><small>對局</small></button>
+      <button data-tab="log"><span>☷</span><small>Log</small></button>
+      <button data-tab="settings"><span>⚙</span><small>設定</small></button>
+    </nav>
+  </div>
+
+  <div id="sheet-backdrop" class="sheet-backdrop"></div>
+
+  <section id="player-sheet" class="sheet compact-sheet" role="dialog" aria-modal="true">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <div><div class="eyebrow">Player</div><h2 id="sheet-title"></h2><p id="sheet-score"></p></div>
+      <button class="close-button" data-close-sheet>×</button>
+    </div>
+    <div class="action-grid">
+      <button id="action-ron" class="action-tile win"><strong>榮和</strong><small>選放銃者／番符</small></button>
+      <button id="action-tsumo" class="action-tile win"><strong>自摸</strong><small>輸入番符</small></button>
+      <button id="action-riichi" class="action-tile"><strong>立直</strong><small>-1000 → 供託</small></button>
+      <button id="action-draw" class="action-tile"><strong>流局</strong><small>點選聽牌者</small></button>
+    </div>
+  </section>
+
+  <section id="settlement-sheet" class="sheet settlement-sheet" role="dialog" aria-modal="true">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header simple">
+      <span></span>
+      <button class="close-button" data-close-sheet>×</button>
+    </div>
+    <div id="settlement-content" class="settlement-content"></div>
+  </section>
+
+  <div id="toast" class="toast"></div>
+
+  <script src="dist/logic.js"></script>
+  <script src="dist/app.js"></script>
+</body>
+</html>

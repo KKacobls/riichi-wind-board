@@ -1,0 +1,13 @@
+{
+  "name": "riichi-wind-board",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "build": "tsc",
+    "test": "npm run build && node tests/logic.test.js",
+    "serve": "python -m http.server 8000"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.3"
+  }
+}
