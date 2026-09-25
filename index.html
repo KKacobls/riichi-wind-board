@@ -77,6 +77,29 @@
         </div>
 
         <div class="settings-card">
+          <div class="settings-title">顯示與玩家</div>
+
+          <div class="field-group">
+            <span class="field-label">三麻第三家位置</span>
+            <div class="segmented">
+              <label><input type="radio" name="sanma-third-seat" value="left"><span>左方</span></label>
+              <label><input type="radio" name="sanma-third-seat" value="top"><span>上方</span></label>
+            </div>
+            <p class="settings-caption">三麻少一個座位時，可切換第三家顯示在左邊或上面。</p>
+          </div>
+
+          <div class="field-group">
+            <span class="field-label">中央文字大小 <strong id="center-text-scale-value">100%</strong></span>
+            <input id="center-text-scale" type="range" min="75" max="150" step="5" value="100">
+          </div>
+
+          <div class="field-group">
+            <span class="field-label">玩家名稱</span>
+            <div id="player-name-fields" class="player-name-fields"></div>
+          </div>
+        </div>
+
+        <div class="settings-card">
           <div class="settings-title">規則</div>
           <label class="toggle-row">
             <span><strong>切上滿貫</strong><small>4番30符／3番60符 → 滿貫</small></span>
@@ -130,7 +153,6 @@
     <div class="action-grid">
       <button id="action-ron" class="action-tile win"><strong>榮和</strong><small>選放銃者／番符</small></button>
       <button id="action-tsumo" class="action-tile win"><strong>自摸</strong><small>輸入番符</small></button>
-      <button id="action-riichi" class="action-tile"><strong>立直</strong><small>-1000 → 供託</small></button>
       <button id="action-draw" class="action-tile"><strong>流局</strong><small>點選聽牌者</small></button>
     </div>
   </section>
