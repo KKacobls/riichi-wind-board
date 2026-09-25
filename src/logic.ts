@@ -329,6 +329,59 @@ namespace RW {
     };
   }
 
+
+  export function settleAbortiveDraw(game: GameState): SettlementResult {
+    if (game.ended) throw new Error('對局已終局');
+    game.honba += 1;
+    resetHandFlags(game);
+    return {
+      deltas: Array(playerCount(game.mode)).fill(0),
+      description: `中途流局｜連莊・${game.honba}本場｜供託保留 ${game.riichiSticks}`,
+      riichiRecipient: null,
+    };
+  }
+
+  export function settleNagashiMangan(game: GameState, winners: number[], dealerTenpai: boolean): SettlementResult {
+    if (game.ended) throw new Error('對局已終局');
+    const count = playerCount(game.mode);
+    const uniqueWinners = [...new Set(winners)].filter(i => i >= 0 && i < count);
+    if (!uniqueWinners.length) throw new Error('至少要選一位流局滿貫者');
+
+    const deltas = Array(count).fill(0);
+    const base = 2000;
+    const details: string[] = [];
+
+    for (const winner of uniqueWinners) {
+      const winnerIsDealer = winner === game.dealerIndex;
+      let received = 0;
+      for (let payer = 0; payer < count; payer++) {
+        if (payer === winner) continue;
+        const payment = tsumoPayment(base, winnerIsDealer, payer === game.dealerIndex);
+        deltas[payer] -= payment;
+        deltas[winner] += payment;
+        received += payment;
+      }
+      details.push(`${WIND_NAMES[seatWind(game, winner)]}家 +${received}`);
+    }
+
+    game.scores = game.scores.map((s, i) => s + deltas[i]);
+    game.honba += 1;
+    if (!dealerTenpai) advanceDealer(game);
+    resetHandFlags(game);
+
+    return {
+      deltas,
+      description: `流局滿貫｜${details.join('；')}｜不計聽牌罰符｜供託保留 ${game.riichiSticks}`,
+      riichiRecipient: null,
+    };
+  }
+
+  export function overrideDealer(game: GameState, player: number): void {
+    const count = playerCount(game.mode);
+    if (!Number.isInteger(player) || player < 0 || player >= count) throw new Error('無效的莊家');
+    game.dealerIndex = player;
+  }
+
   export function scoreDeltaText(deltas: number[]): string {
     return deltas.map((d, i) => `P${i + 1} ${d >= 0 ? '+' : ''}${d}`).join(' / ');
   }
