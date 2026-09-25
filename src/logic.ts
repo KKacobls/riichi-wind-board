@@ -1,6 +1,7 @@
 namespace RW {
   export type Mode = 'yonma' | 'sanma';
   export type GameLength = 'east' | 'hanchan';
+  export type SanmaThirdSeat = 'left' | 'top';
   export type LimitKind = 'normal' | 'mangan' | 'haneman' | 'baiman' | 'sanbaiman' | 'yakuman';
 
   export interface Rules {
@@ -15,6 +16,9 @@ namespace RW {
     gameLength: GameLength;
     startYonma: number;
     startSanma: number;
+    sanmaThirdSeat: SanmaThirdSeat;
+    centerTextScale: number;
+    playerNames: string[];
     rules: Rules;
   }
 
@@ -65,6 +69,9 @@ namespace RW {
     gameLength: 'hanchan',
     startYonma: 25000,
     startSanma: 35000,
+    sanmaThirdSeat: 'left',
+    centerTextScale: 100,
+    playerNames: ['玩家 A', '玩家 B', '玩家 C', '玩家 D'],
     rules: {
       kiriageMangan: true,
       atamahane: true,
