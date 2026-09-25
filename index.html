@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
   <meta name="theme-color" content="#1f6844">
   <title>日麻風位盤</title>
-  <link rel="stylesheet" href="style.css?v=0.2.4">
+  <link rel="stylesheet" href="style.css?v=0.2.5">
 </head>
 <body>
   <div class="app-shell">
@@ -26,6 +26,7 @@
               <span id="mode-main" class="center-kicker">四麻・半莊</span>
               <strong id="round-main">東1局</strong>
               <span id="honba-main">0 本場</span>
+              <span id="honba-dots" class="honba-dots" aria-label="0 本場"></span>
               <span id="kyotaku-main">供託 0</span>
             </button>
           </div>
@@ -127,7 +128,6 @@
             <div id="dealer-override-fields" class="dealer-override-fields"></div>
             <p class="settings-caption">只改目前莊家／風位，不改局數與場風；用來現場校正。</p>
           </div>
-          <button id="undo-button" class="secondary-button">↶ 復原上一步</button>
         </div>
 
         <div class="settings-card">
@@ -141,7 +141,7 @@
           <div class="settings-title">對局</div>
           <button id="new-game-button" class="primary-button">新開一局</button>
           <p class="settings-caption">舊對局會留在 Log；新局動作本身也可以復原。</p>
-          <div class="version-row"><span>日麻風位盤</span><strong id="app-version">v0.2.4</strong></div>
+          <div class="version-row"><span>日麻風位盤</span><strong id="app-version">v0.2.5</strong></div>
           <p class="settings-caption">資料保存在此瀏覽器的 localStorage。重新整理、關閉分頁後再開都會保留；清除 Safari 網站資料或無痕模式例外。</p>
         </div>
       </section>
@@ -152,6 +152,7 @@
       <button data-tab="log"><span>☷</span><small>Log</small></button>
       <button data-tab="settings"><span>⚙</span><small>設定</small></button>
     </nav>
+    <button id="undo-button" class="game-undo-button" type="button">↶ 上一步</button>
     <button id="menu-toggle-button" class="menu-toggle-button" type="button" aria-controls="main-tabbar" aria-expanded="false">顯示</button>
   </div>
 
@@ -181,7 +182,7 @@
 
   <div id="toast" class="toast"></div>
 
-  <script src="dist/logic.js?v=0.2.4"></script>
-  <script src="dist/app.js?v=0.2.4"></script>
+  <script src="dist/logic.js?v=0.2.5"></script>
+  <script src="dist/app.js?v=0.2.5"></script>
 </body>
 </html>
