@@ -255,3 +255,57 @@ body.sheet-open { overflow: hidden; }
 @media (max-width: 760px) {
   .draw-mode-grid { grid-template-columns: 1fr; }
 }
+
+/* === Game fullscreen green canvas === */
+body[data-active-tab="game"] {
+  background: #1f6844 !important;
+  color: #fff;
+}
+
+body[data-active-tab="game"] .app-shell,
+body[data-active-tab="game"] .content,
+body[data-active-tab="game"] #view-game,
+body[data-active-tab="game"] .game-wrap {
+  background:
+    radial-gradient(circle at 50% 42%, rgba(255,255,255,.16), transparent 34%),
+    linear-gradient(145deg, #2e7d53 0%, #1f6844 48%, #19593a 100%) !important;
+}
+
+body[data-active-tab="game"] .content {
+  max-width: none;
+  width: 100vw;
+}
+
+body[data-active-tab="game"] .topbar {
+  background: rgba(31,104,68,.88) !important;
+  color: #fff;
+  border-bottom-color: rgba(255,255,255,.12);
+}
+
+body[data-active-tab="game"] .topbar .eyebrow {
+  color: rgba(255,255,255,.68);
+}
+
+body[data-active-tab="game"] .board {
+  background: transparent;
+  box-shadow: none;
+  border-radius: 0;
+}
+
+body[data-active-tab="game"] .board::after {
+  border-color: rgba(255,255,255,.12);
+}
+
+body[data-active-tab="game"] .game-note {
+  color: rgba(255,255,255,.62);
+}
+
+@media (prefers-color-scheme: dark) {
+  body[data-active-tab="game"] {
+    background: #1f6844 !important;
+  }
+
+  body[data-active-tab="game"] .topbar {
+    background: rgba(31,104,68,.88) !important;
+  }
+}
