@@ -570,3 +570,111 @@ body[data-active-tab="game"] .board.sanma .pos-left {
 body[data-active-tab="game"] .board.sanma .pos-right {
   right: calc(6px + env(safe-area-inset-right)) !important;
 }
+
+/* === Dealer emphasis + honba dots + game undo v0.2.5 === */
+.player-card.dealer {
+  border-width: 4px;
+  border-color: #ffd60a;
+  background: linear-gradient(180deg, rgba(255,251,225,.98), rgba(255,245,190,.96));
+  box-shadow:
+    0 12px 34px rgba(0,0,0,.22),
+    0 0 0 5px rgba(255,214,10,.24),
+    0 0 28px rgba(255,214,10,.35);
+}
+
+.dealer-badge {
+  justify-self: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  height: 22px;
+  margin-bottom: 2px;
+  padding: 0 9px;
+  border-radius: 999px;
+  background: #ffd60a;
+  color: #5d4700;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: .08em;
+  box-shadow: inset 0 0 0 1px rgba(120,90,0,.18);
+}
+
+.honba-dots {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+  width: min(120px, 80%);
+  min-height: 9px;
+  margin: 1px 0 2px;
+}
+
+.honba-dots:empty {
+  min-height: 0;
+  margin: 0;
+}
+
+.honba-dots i {
+  display: block;
+  width: 8px;
+  height: 8px;
+  flex: 0 0 8px;
+  border-radius: 50%;
+  background: #ffb000;
+  box-shadow:
+    0 0 0 2px rgba(255,176,0,.16),
+    0 0 8px rgba(255,176,0,.85);
+}
+
+.game-undo-button {
+  display: none;
+  position: fixed;
+  z-index: 35;
+  left: calc(10px + env(safe-area-inset-left));
+  bottom: calc(10px + env(safe-area-inset-bottom));
+  min-width: 84px;
+  height: 46px;
+  padding: 0 15px;
+  border-radius: 23px;
+  background: rgba(10,52,34,.82);
+  color: #fff;
+  border: 1px solid rgba(255,255,255,.14);
+  box-shadow: 0 10px 28px rgba(0,0,0,.22);
+  backdrop-filter: blur(22px);
+  -webkit-backdrop-filter: blur(22px);
+  font-size: 12px;
+  font-weight: 750;
+}
+
+body[data-active-tab="game"] .game-undo-button {
+  display: block;
+}
+
+.game-undo-button:disabled {
+  opacity: .36;
+}
+
+@media (min-width: 700px) {
+  .game-undo-button {
+    left: calc(14px + env(safe-area-inset-left));
+    bottom: calc(14px + env(safe-area-inset-bottom));
+    min-width: 94px;
+    height: 50px;
+    border-radius: 25px;
+    font-size: 13px;
+  }
+
+  .dealer-badge {
+    min-width: 52px;
+    height: 24px;
+    font-size: 12px;
+  }
+
+  .honba-dots i {
+    width: 9px;
+    height: 9px;
+    flex-basis: 9px;
+  }
+}
