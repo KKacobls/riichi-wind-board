@@ -513,3 +513,60 @@ body[data-active-tab="game"] .menu-toggle-button {
     transform: translate(-50%,0);
   }
 }
+
+/* === Fix A/C board containing block v0.2.4 === */
+body[data-active-tab="game"] #view-game.active {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+}
+
+body[data-active-tab="game"] .game-wrap {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+body[data-active-tab="game"] .board {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  max-width: none !important;
+  max-height: none !important;
+  margin: 0 !important;
+  aspect-ratio: auto !important;
+}
+
+body[data-active-tab="game"] .pos-top {
+  top: calc(6px + env(safe-area-inset-top)) !important;
+  bottom: auto !important;
+}
+
+body[data-active-tab="game"] .pos-bottom {
+  bottom: calc(6px + env(safe-area-inset-bottom)) !important;
+  top: auto !important;
+}
+
+body[data-active-tab="game"] .pos-left {
+  left: calc(6px + env(safe-area-inset-left)) !important;
+  right: auto !important;
+}
+
+body[data-active-tab="game"] .pos-right {
+  right: calc(6px + env(safe-area-inset-right)) !important;
+  left: auto !important;
+}
+
+body[data-active-tab="game"] .board.sanma .pos-left {
+  left: calc(6px + env(safe-area-inset-left)) !important;
+}
+
+body[data-active-tab="game"] .board.sanma .pos-right {
+  right: calc(6px + env(safe-area-inset-right)) !important;
+}
