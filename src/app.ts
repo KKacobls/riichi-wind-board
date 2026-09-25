@@ -14,10 +14,11 @@ interface PersistedApp {
 }
 
 const STORAGE_KEY = 'riichi-wind-board.v1';
-const APP_VERSION = '0.2.2';
+const APP_VERSION = '0.2.3';
 let core: RW.AppCore;
 let journal: JournalEntry[] = [];
 let activeTab: 'game' | 'log' | 'settings' = 'game';
+let menuOpen = false;
 let selectedPlayer = 0;
 
 const $ = <T extends HTMLElement = HTMLElement>(selector: string): T => {
@@ -149,6 +150,10 @@ function render(): void {
 
 function renderTabs(): void {
   document.body.dataset.activeTab = activeTab;
+  document.body.classList.toggle('menu-open', menuOpen);
+  const menuToggle = $('#menu-toggle-button');
+  menuToggle.textContent = menuOpen ? '隱藏' : '顯示';
+  menuToggle.setAttribute('aria-expanded', menuOpen ? 'true' : 'false');
   document.querySelectorAll<HTMLElement>('[data-tab]').forEach(el => {
     el.classList.toggle('active', el.dataset.tab === activeTab);
   });
@@ -683,8 +688,13 @@ function startNewGame(): void {
 function bindStaticEvents(): void {
   document.querySelectorAll<HTMLElement>('[data-tab]').forEach(el => el.addEventListener('click', () => {
     activeTab = el.dataset.tab as typeof activeTab;
+    menuOpen = false;
     render();
   }));
+  $('#menu-toggle-button').addEventListener('click', () => {
+    menuOpen = !menuOpen;
+    renderTabs();
+  });
   $('#undo-button').addEventListener('click', undoLast);
   $('#sheet-backdrop').addEventListener('click', closeSheets);
   document.querySelectorAll('[data-close-sheet]').forEach(el => el.addEventListener('click', closeSheets));
