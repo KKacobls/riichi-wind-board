@@ -14,7 +14,7 @@
         <div class="eyebrow">Riichi Table</div>
         <h1>日麻風位盤</h1>
       </div>
-      <button id="undo-button" class="icon-button" aria-label="上一步">↶</button>
+      <span class="topbar-spacer" aria-hidden="true"></span>
     </header>
 
     <main class="content">
@@ -121,16 +121,28 @@
         </div>
 
         <div class="settings-card">
+          <div class="settings-title">對局控制</div>
+          <div class="field-group">
+            <span class="field-label">手動指定目前莊家</span>
+            <div id="dealer-override-fields" class="dealer-override-fields"></div>
+            <p class="settings-caption">只改目前莊家／風位，不改局數與場風；用來現場校正。</p>
+          </div>
+          <button id="undo-button" class="secondary-button">↶ 復原上一步</button>
+        </div>
+
+        <div class="settings-card">
           <div class="settings-title">手動修改分數</div>
           <div id="manual-score-fields" class="manual-score-fields"></div>
           <button id="apply-manual-score" class="secondary-button">套用分數</button>
-          <p class="settings-caption">手動修改也會寫入 Log，並可按右上角 ↶ 復原。</p>
+          <p class="settings-caption">手動修改也會寫入 Log，並可在「對局控制」復原。</p>
         </div>
 
         <div class="settings-card danger-zone">
           <div class="settings-title">對局</div>
           <button id="new-game-button" class="primary-button">新開一局</button>
           <p class="settings-caption">舊對局會留在 Log；新局動作本身也可以復原。</p>
+          <div class="version-row"><span>日麻風位盤</span><strong id="app-version">v0.2.0</strong></div>
+          <p class="settings-caption">資料保存在此瀏覽器的 localStorage。重新整理、關閉分頁後再開都會保留；清除 Safari 網站資料或無痕模式例外。</p>
         </div>
       </section>
     </main>
