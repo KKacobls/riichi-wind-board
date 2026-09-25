@@ -133,3 +133,44 @@ assert.equal(RW.calculateBase(score(1, 30, 'yakuman', 3), rules).base, 24000); /
 }
 
 console.log('All riichi wind-board logic tests passed.');
+
+
+// Abortive draw: dealer stays, honba +1, riichi sticks carry.
+{
+  const g = game('yonma');
+  RW.declareRiichi(g, 1);
+  const r = RW.settleAbortiveDraw(g);
+  assert.equal(g.dealerIndex, 0);
+  assert.equal(g.honba, 1);
+  assert.equal(g.riichiSticks, 1);
+  assert.deepEqual(r.deltas, [0, 0, 0, 0]);
+}
+
+// Tenhou-style nagashi mangan replaces noten payments; honba +1, riichi sticks carry.
+// Non-dealer mangan receives 8000 in yonma: 4000 from dealer + 2000 + 2000.
+{
+  const g = game('yonma');
+  RW.declareRiichi(g, 2);
+  const r = RW.settleNagashiMangan(g, [1], true);
+  assert.deepEqual(r.deltas, [-4000, 8000, -2000, -2000]);
+  assert.equal(g.honba, 1);
+  assert.equal(g.riichiSticks, 1);
+  assert.equal(g.dealerIndex, 0);
+}
+
+// Nagashi mangan with dealer noten rotates dealer while keeping +1 honba.
+{
+  const g = game('yonma');
+  RW.settleNagashiMangan(g, [1], false);
+  assert.equal(g.dealerIndex, 1);
+  assert.equal(g.honba, 1);
+}
+
+// Manual dealer override changes only dealer seat.
+{
+  const g = game('yonma');
+  g.kyoku = 3;
+  RW.overrideDealer(g, 2);
+  assert.equal(g.dealerIndex, 2);
+  assert.equal(g.kyoku, 3);
+}
