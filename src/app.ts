@@ -14,7 +14,7 @@ interface PersistedApp {
 }
 
 const STORAGE_KEY = 'riichi-wind-board.v1';
-const APP_VERSION = '0.2.4';
+const APP_VERSION = '0.2.5';
 let core: RW.AppCore;
 let journal: JournalEntry[] = [];
 let activeTab: 'game' | 'log' | 'settings' = 'game';
@@ -185,6 +185,7 @@ function renderGame(): void {
     card.className = `player-card ${i === game.dealerIndex ? 'dealer' : ''}`;
     card.dataset.player = String(i);
     card.innerHTML = `
+      ${i === game.dealerIndex ? '<span class="dealer-badge">莊家</span>' : ''}
       <span class="player-meta">${escapeHtml(playerLabel(i))}</span>
       <strong class="wind-badge">${windLabel(i)}</strong>
       <span class="score-value">${fmt(game.scores[i])}</span>
@@ -208,6 +209,8 @@ function renderGame(): void {
 
   $('#round-main').textContent = RW.roundLabel(game);
   $('#honba-main').textContent = `${game.honba} 本場`;
+  $('#honba-dots').innerHTML = Array.from({ length: game.honba }, () => '<i></i>').join('');
+  $('#honba-dots').setAttribute('aria-label', `${game.honba} 本場`);
   $('#kyotaku-main').textContent = `供託 ${game.riichiSticks}`;
   $('#mode-main').textContent = `${modeLabel(game.mode)}・${lengthLabel(game.gameLength)}`;
   $('#game-state-note').textContent = game.ended ? '本場已結束，可到設定開新局' : '點玩家分數記錄事件；點中央可流局';
