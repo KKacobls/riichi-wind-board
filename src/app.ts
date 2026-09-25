@@ -14,7 +14,7 @@ interface PersistedApp {
 }
 
 const STORAGE_KEY = 'riichi-wind-board.v1';
-const APP_VERSION = '0.2.0';
+const APP_VERSION = '0.2.1';
 let core: RW.AppCore;
 let journal: JournalEntry[] = [];
 let activeTab: 'game' | 'log' | 'settings' = 'game';
@@ -148,6 +148,7 @@ function render(): void {
 }
 
 function renderTabs(): void {
+  document.body.dataset.activeTab = activeTab;
   document.querySelectorAll<HTMLElement>('[data-tab]').forEach(el => {
     el.classList.toggle('active', el.dataset.tab === activeTab);
   });
